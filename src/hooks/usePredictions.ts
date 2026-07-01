@@ -100,17 +100,24 @@ export function useSavePrediction() {
           if (gsError) throw gsError
         }
       } else {
+        // Upsert: se já existir palpite para este jogo (constraint unique), atualiza
         const { data: pred, error } = await supabase
           .from('predictions')
-          .insert({
-            user_id: user.id,
-            match_id: matchId,
-            home_score: homeScore,
-            away_score: awayScore,
-          })
+          .upsert(
+            {
+              user_id: user.id,
+              match_id: matchId,
+              home_score: homeScore,
+              away_score: awayScore,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,match_id' }
+          )
           .select()
           .single()
         if (error) throw error
+
+        await supabase.from('prediction_goalscorers').delete().eq('prediction_id', pred.id)
 
         if (validGoalscorers.length > 0) {
           const { error: gsError } = await supabase.from('prediction_goalscorers').insert(

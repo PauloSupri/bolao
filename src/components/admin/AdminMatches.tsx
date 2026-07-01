@@ -119,11 +119,11 @@ export function AdminMatches() {
             />
             <Select label="Time da casa" value={form.home_team_id} onChange={(e) => setForm({ ...form, home_team_id: e.target.value })}>
               <option value="">A definir</option>
-              {teams.map((t) => <option key={t.id} value={t.id}>{getFlagEmoji(t.code)} {t.name}</option>)}
+              {teams.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.code})</option>)}
             </Select>
             <Select label="Time visitante" value={form.away_team_id} onChange={(e) => setForm({ ...form, away_team_id: e.target.value })}>
               <option value="">A definir</option>
-              {teams.map((t) => <option key={t.id} value={t.id}>{getFlagEmoji(t.code)} {t.name}</option>)}
+              {teams.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.code})</option>)}
             </Select>
             <Input
               label="Data e hora"

@@ -6,7 +6,7 @@ import { Card } from '../ui/Card'
 import { Input } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
-import { getFlagEmoji } from '../../lib/utils'
+import { FlagImage } from '../FlagImage'
 
 export function AdminPlayers() {
   const { data: players = [] } = usePlayers()
@@ -46,7 +46,7 @@ export function AdminPlayers() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Select label="Seleção" value={form.team_id} onChange={(e) => setForm({ ...form, team_id: e.target.value })}>
               <option value="">Selecione...</option>
-              {teams.map((t) => <option key={t.id} value={t.id}>{getFlagEmoji(t.code)} {t.name}</option>)}
+              {teams.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.code})</option>)}
             </Select>
             <Input
               label="Nome"
@@ -86,7 +86,7 @@ export function AdminPlayers() {
           className="max-w-xs"
         >
           <option value="">Todas as seleções</option>
-          {teams.map((t) => <option key={t.id} value={t.id}>{getFlagEmoji(t.code)} {t.name}</option>)}
+          {teams.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.code})</option>)}
         </Select>
         <span className="text-sm text-slate-400">{filtered.length} jogadores</span>
       </div>
@@ -95,7 +95,7 @@ export function AdminPlayers() {
         {filtered.map((player) => (
           <Card key={player.id} className="p-3">
             <div className="flex items-center gap-3">
-              <span className="text-lg">{getFlagEmoji(player.team?.code ?? '')}</span>
+              <FlagImage code={player.team?.code ?? ''} size="sm" />
               <div>
                 <p className="text-sm font-medium text-white">
                   {player.shirt_number ? `#${player.shirt_number} ` : ''}{player.name}

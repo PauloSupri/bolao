@@ -47,7 +47,7 @@ export function phaseLabel(phase: MatchPhase): string {
     group_j: 'Grupo J',
     group_k: 'Grupo K',
     group_l: 'Grupo L',
-    round_of_32: 'Rodada de 32',
+    round_of_32: 'Fase de Grupos — Rodada Final',
     round_of_16: 'Oitavas de Final',
     quarter_final: 'Quartas de Final',
     semi_final: 'Semifinal',
@@ -72,25 +72,24 @@ export function isGroupPhase(phase: MatchPhase): boolean {
 }
 
 export function getFlagEmoji(code: string): string {
+  // 48 seleções classificadas para a Copa do Mundo 2026
   const flags: Record<string, string> = {
-    BRA: '🇧🇷', ARG: '🇦🇷', FRA: '🇫🇷', ENG: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    GER: '🇩🇪', ESP: '🇪🇸', POR: '🇵🇹', ITA: '🇮🇹',
-    NED: '🇳🇱', BEL: '🇧🇪', URU: '🇺🇾', COL: '🇨🇴',
-    USA: '🇺🇸', MEX: '🇲🇽', CAN: '🇨🇦', JAP: '🇯🇵',
-    KOR: '🇰🇷', MAR: '🇲🇦', SEN: '🇸🇳', GHA: '🇬🇭',
-    NIG: '🇳🇬', CMR: '🇨🇲', EGY: '🇪🇬', TUN: '🇹🇳',
-    AUS: '🇦🇺', NZL: '🇳🇿', SUI: '🇨🇭', DEN: '🇩🇰',
-    SWE: '🇸🇪', NOR: '🇳🇴', POL: '🇵🇱', CRO: '🇭🇷',
-    SRB: '🇷🇸', SCO: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', WAL: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', AUT: '🇦🇹',
-    ECU: '🇪🇨', PER: '🇵🇪', CHI: '🇨🇱', VEN: '🇻🇪',
-    BOL: '🇧🇴', PAR: '🇵🇾', IRN: '🇮🇷', SAU: '🇸🇦',
-    QAT: '🇶🇦', UAE: '🇦🇪', IRQ: '🇮🇶', SYR: '🇸🇾',
-    HUN: '🇭🇺', CZE: '🇨🇿', SVK: '🇸🇰', ROM: '🇷🇴',
-    UKR: '🇺🇦', TUR: '🇹🇷', GRE: '🇬🇷', ALB: '🇦🇱',
-    COD: '🇨🇩', MLI: '🇲🇱', BFA: '🇧🇫', CIV: '🇨🇮',
-    THA: '🇹🇭', IDN: '🇮🇩', IND: '🇮🇳', CHN: '🇨🇳',
-    SLO: '🇸🇮', MNT: '🇲🇪', KOS: '🇽🇰', MKD: '🇲🇰',
-    GEO: '🇬🇪', ARM: '🇦🇲', ISL: '🇮🇸', FIN: '🇫🇮',
+    // CONMEBOL
+    ARG: '🇦🇷', BRA: '🇧🇷', COL: '🇨🇴', ECU: '🇪🇨', PAR: '🇵🇾', URU: '🇺🇾',
+    // CONCACAF
+    CAN: '🇨🇦', CUW: '🇨🇼', HAI: '🇭🇹', MEX: '🇲🇽', PAN: '🇵🇦', USA: '🇺🇸',
+    // UEFA
+    AUT: '🇦🇹', BEL: '🇧🇪', BIH: '🇧🇦', CRO: '🇭🇷', CZE: '🇨🇿',
+    ENG: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', FRA: '🇫🇷', GER: '🇩🇪', NED: '🇳🇱', NOR: '🇳🇴',
+    POR: '🇵🇹', SCO: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', ESP: '🇪🇸', SWE: '🇸🇪', SUI: '🇨🇭', TUR: '🇹🇷',
+    // AFC
+    AUS: '🇦🇺', IRN: '🇮🇷', IRQ: '🇮🇶', JPN: '🇯🇵', JOR: '🇯🇴',
+    QAT: '🇶🇦', SAU: '🇸🇦', KOR: '🇰🇷', UZB: '🇺🇿',
+    // CAF
+    ALG: '🇩🇿', CPV: '🇨🇻', COD: '🇨🇩', EGY: '🇪🇬', GHA: '🇬🇭',
+    CIV: '🇨🇮', MAR: '🇲🇦', SEN: '🇸🇳', RSA: '🇿🇦', TUN: '🇹🇳',
+    // OFC
+    NZL: '🇳🇿',
   }
   return flags[code] || '🏳️'
 }

@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { useMyPredictions } from '../hooks/usePredictions'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
-import { formatDateShort, phaseLabel, getFlagEmoji } from '../lib/utils'
+import { formatDateShort, phaseLabel } from '../lib/utils'
+import { FlagImage } from '../components/FlagImage'
 import { Star, Trophy } from 'lucide-react'
 
 export function MyPredictionsPage() {
@@ -72,7 +73,7 @@ export function MyPredictionsPage() {
                     <div className="flex items-center gap-3 flex-1">
                       <div className="flex items-center gap-2 flex-1 justify-end">
                         <span className="text-sm text-white font-medium text-right">{match.home_team?.name}</span>
-                        <span className="text-lg">{getFlagEmoji(match.home_team?.code ?? '')}</span>
+                        <FlagImage code={match.home_team?.code ?? ''} size="sm" />
                       </div>
 
                       <div className="flex flex-col items-center gap-0.5 min-w-16">
@@ -89,7 +90,7 @@ export function MyPredictionsPage() {
                       </div>
 
                       <div className="flex items-center gap-2 flex-1">
-                        <span className="text-lg">{getFlagEmoji(match.away_team?.code ?? '')}</span>
+                        <FlagImage code={match.away_team?.code ?? ''} size="sm" />
                         <span className="text-sm text-white font-medium">{match.away_team?.name}</span>
                       </div>
                     </div>

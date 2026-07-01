@@ -66,17 +66,19 @@ export function useSavePrediction() {
       matchId,
       homeScore,
       awayScore,
-      playerIds,
+      goalscorers,
       existingId,
     }: {
       matchId: string
       homeScore: number
       awayScore: number
-      playerIds: string[]
+      goalscorers: { player_id: string; goals: number }[]
       existingId?: string
     }) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Não autenticado')
+
+      const validGoalscorers = goalscorers.filter((g) => g.goals > 0)
 
       if (existingId) {
         const { error } = await supabase
@@ -91,9 +93,9 @@ export function useSavePrediction() {
 
         await supabase.from('prediction_goalscorers').delete().eq('prediction_id', existingId)
 
-        if (playerIds.length > 0) {
+        if (validGoalscorers.length > 0) {
           const { error: gsError } = await supabase.from('prediction_goalscorers').insert(
-            playerIds.map((pid) => ({ prediction_id: existingId, player_id: pid }))
+            validGoalscorers.map((g) => ({ prediction_id: existingId, player_id: g.player_id, goals: g.goals }))
           )
           if (gsError) throw gsError
         }
@@ -110,9 +112,9 @@ export function useSavePrediction() {
           .single()
         if (error) throw error
 
-        if (playerIds.length > 0) {
+        if (validGoalscorers.length > 0) {
           const { error: gsError } = await supabase.from('prediction_goalscorers').insert(
-            playerIds.map((pid) => ({ prediction_id: pred.id, player_id: pid }))
+            validGoalscorers.map((g) => ({ prediction_id: pred.id, player_id: g.player_id, goals: g.goals }))
           )
           if (gsError) throw gsError
         }

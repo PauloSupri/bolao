@@ -5,7 +5,7 @@ import { Card } from '../ui/Card'
 import { Input } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Select } from '../ui/Select'
-import { getFlagEmoji } from '../../lib/utils'
+import { FlagImage } from '../FlagImage'
 import type { Team } from '../../types'
 
 const groups = ['A','B','C','D','E','F','G','H','I','J','K','L']
@@ -92,7 +92,7 @@ export function AdminTeams() {
         {teams.map((team) => (
           <Card key={team.id} className="p-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{getFlagEmoji(team.code)}</span>
+              <FlagImage code={team.code} size="md" />
               <div>
                 <p className="text-sm font-medium text-white">{team.name}</p>
                 <p className="text-xs text-slate-400">{team.code} • Grupo {team.group}</p>

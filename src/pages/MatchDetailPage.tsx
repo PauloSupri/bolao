@@ -7,7 +7,8 @@ import { useMatchPlayers } from '../hooks/usePlayers'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
-import { formatDate, phaseLabel, isMatchLocked, getFlagEmoji } from '../lib/utils'
+import { formatDate, phaseLabel, isMatchLocked } from '../lib/utils'
+import { FlagImage } from '../components/FlagImage'
 
 export function MatchDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -21,26 +22,69 @@ export function MatchDetailPage() {
   const isFinishedOrLive = match?.status === 'finished' || match?.status === 'live'
   const { data: allPredictions = [] } = useMatchPredictions(id!, isFinishedOrLive)
 
-  const [homeScore, setHomeScore] = useState(myPrediction?.home_score ?? 0)
-  const [awayScore, setAwayScore] = useState(myPrediction?.away_score ?? 0)
-  const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(
-    new Set(myPrediction?.prediction_goalscorers?.map((g: any) => g.player_id) ?? [])
-  )
+  const [homeScore, setHomeScoreRaw] = useState(myPrediction?.home_score ?? 0)
+  const [awayScore, setAwayScoreRaw] = useState(myPrediction?.away_score ?? 0)
+  const [goalMap, setGoalMap] = useState<Map<string, number>>(() => {
+    const m = new Map<string, number>()
+    myPrediction?.prediction_goalscorers?.forEach((g: any) => m.set(g.player_id, g.goals ?? 1))
+    return m
+  })
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
   // Sync local state when prediction loads
   if (myPrediction && homeScore === 0 && awayScore === 0 && !saved) {
-    setHomeScore(myPrediction.home_score)
-    setAwayScore(myPrediction.away_score)
-    setSelectedPlayers(new Set(myPrediction.prediction_goalscorers?.map((g: any) => g.player_id) ?? []))
+    setHomeScoreRaw(myPrediction.home_score)
+    setAwayScoreRaw(myPrediction.away_score)
+    const m = new Map<string, number>()
+    myPrediction.prediction_goalscorers?.forEach((g: any) => m.set(g.player_id, g.goals ?? 1))
+    if (goalMap.size === 0) setGoalMap(m)
   }
 
-  function togglePlayer(playerId: string) {
-    setSelectedPlayers((prev) => {
-      const next = new Set(prev)
-      if (next.has(playerId)) next.delete(playerId)
-      else next.add(playerId)
+  // Trim goalMap when a team's score decreases below their assigned goals total
+  function trimGoals(map: Map<string, number>, teamPlayerIds: string[], maxGoals: number): Map<string, number> {
+    let total = teamPlayerIds.reduce((s, id) => s + (map.get(id) ?? 0), 0)
+    if (total <= maxGoals) return map
+    const next = new Map(map)
+    // Remove goals from last players first until within limit
+    for (const id of [...teamPlayerIds].reverse()) {
+      if (total <= maxGoals) break
+      const cur = next.get(id) ?? 0
+      const remove = Math.min(cur, total - maxGoals)
+      const val = cur - remove
+      if (val === 0) next.delete(id)
+      else next.set(id, val)
+      total -= remove
+    }
+    return next
+  }
+
+  function changeScore(team: 'home' | 'away', delta: number) {
+    if (team === 'home') {
+      const next = Math.max(0, homeScore + delta)
+      setHomeScoreRaw(next)
+      if (delta < 0) {
+        setGoalMap((prev) => trimGoals(prev, homePlayers.map((p) => p.id), next))
+      }
+    } else {
+      const next = Math.max(0, awayScore + delta)
+      setAwayScoreRaw(next)
+      if (delta < 0) {
+        setGoalMap((prev) => trimGoals(prev, awayPlayers.map((p) => p.id), next))
+      }
+    }
+  }
+
+  function setPlayerGoals(playerId: string, delta: number, teamPlayerIds: string[], teamScore: number) {
+    setGoalMap((prev) => {
+      const next = new Map(prev)
+      const cur = next.get(playerId) ?? 0
+      const teamTotal = teamPlayerIds.reduce((s, id) => s + (next.get(id) ?? 0), 0)
+      const val = Math.max(0, cur + delta)
+      // Can't exceed team score total
+      if (delta > 0 && teamTotal >= teamScore) return prev
+      if (val === 0) next.delete(playerId)
+      else next.set(playerId, val)
       return next
     })
   }
@@ -53,7 +97,7 @@ export function MatchDetailPage() {
         matchId: match.id,
         homeScore,
         awayScore,
-        playerIds: Array.from(selectedPlayers),
+        goalscorers: Array.from(goalMap.entries()).map(([player_id, goals]) => ({ player_id, goals })),
         existingId: myPrediction?.id,
       })
       setSaved(true)
@@ -97,7 +141,7 @@ export function MatchDetailPage() {
 
         <div className="flex items-center justify-around gap-4 my-6">
           <div className="flex flex-col items-center gap-2 flex-1">
-            <span className="text-5xl">{getFlagEmoji(match.home_team?.code ?? '')}</span>
+            <FlagImage code={match.home_team?.code ?? ''} size="xl" />
             <span className="font-bold text-white text-center">{match.home_team?.name ?? 'A definir'}</span>
             {match.home_team?.code && <span className="text-xs text-slate-400">{match.home_team.code}</span>}
           </div>
@@ -121,7 +165,7 @@ export function MatchDetailPage() {
           </div>
 
           <div className="flex flex-col items-center gap-2 flex-1">
-            <span className="text-5xl">{getFlagEmoji(match.away_team?.code ?? '')}</span>
+            <FlagImage code={match.away_team?.code ?? ''} size="xl" />
             <span className="font-bold text-white text-center">{match.away_team?.name ?? 'A definir'}</span>
             {match.away_team?.code && <span className="text-xs text-slate-400">{match.away_team.code}</span>}
           </div>
@@ -176,12 +220,12 @@ export function MatchDetailPage() {
                 <span className="text-sm text-slate-400">{match.home_team?.name ?? 'Casa'}</span>
                 <div className="flex items-center gap-2">
                   {!locked && (
-                    <button onClick={() => setHomeScore(Math.max(0, homeScore - 1))}
+                    <button onClick={() => changeScore('home', -1)}
                       className="w-8 h-8 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600">−</button>
                   )}
                   <span className="text-3xl font-bold text-white w-10 text-center">{homeScore}</span>
                   {!locked && (
-                    <button onClick={() => setHomeScore(homeScore + 1)}
+                    <button onClick={() => changeScore('home', 1)}
                       className="w-8 h-8 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600">+</button>
                   )}
                 </div>
@@ -193,12 +237,12 @@ export function MatchDetailPage() {
                 <span className="text-sm text-slate-400">{match.away_team?.name ?? 'Fora'}</span>
                 <div className="flex items-center gap-2">
                   {!locked && (
-                    <button onClick={() => setAwayScore(Math.max(0, awayScore - 1))}
+                    <button onClick={() => changeScore('away', -1)}
                       className="w-8 h-8 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600">−</button>
                   )}
                   <span className="text-3xl font-bold text-white w-10 text-center">{awayScore}</span>
                   {!locked && (
-                    <button onClick={() => setAwayScore(awayScore + 1)}
+                    <button onClick={() => changeScore('away', 1)}
                       className="w-8 h-8 bg-slate-700 rounded-lg text-white font-bold hover:bg-slate-600">+</button>
                   )}
                 </div>
@@ -206,60 +250,132 @@ export function MatchDetailPage() {
             </div>
 
             {/* Goalscorer selection */}
-            {players.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Users className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-300">
-                    Quem vai marcar? <span className="text-slate-500 font-normal">(opcional)</span>
-                  </span>
-                </div>
-
-                {homePlayers.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-xs text-slate-500 mb-2">{match.home_team?.name}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {homePlayers.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => !locked && togglePlayer(p.id)}
-                          disabled={locked}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                            selectedPlayers.has(p.id)
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                          } disabled:cursor-default`}
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {awayPlayers.length > 0 && (
-                  <div>
-                    <p className="text-xs text-slate-500 mb-2">{match.away_team?.name}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {awayPlayers.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => !locked && togglePlayer(p.id)}
-                          disabled={locked}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                            selectedPlayers.has(p.id)
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                          } disabled:cursor-default`}
-                        >
-                          {p.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-4 h-4 text-slate-400" />
+                <span className="text-sm font-medium text-slate-300">
+                  Quem vai marcar? <span className="text-slate-500 font-normal">(opcional, +1 pt por goleador)</span>
+                </span>
               </div>
-            )}
+
+              {players.length === 0 ? (
+                <p className="text-xs text-slate-500 italic">Jogadores ainda não cadastrados para este jogo.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Home team */}
+                  {(() => {
+                    const homeIds = homePlayers.map((p) => p.id)
+                    const homeUsed = homeIds.reduce((s, id) => s + (goalMap.get(id) ?? 0), 0)
+                    const homeRemaining = homeScore - homeUsed
+                    return (
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-700">
+                          <div className="flex items-center gap-2">
+                            <FlagImage code={match.home_team?.code ?? ''} size="sm" />
+                            <span className="text-xs font-semibold text-slate-300">{match.home_team?.name}</span>
+                          </div>
+                          {!locked && homeScore > 0 && (
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${homeRemaining > 0 ? 'text-yellow-400 bg-yellow-400/10' : 'text-green-400 bg-green-400/10'}`}>
+                              {homeRemaining > 0 ? `+${homeRemaining} para distribuir` : '✓ distribuído'}
+                            </span>
+                          )}
+                          {!locked && homeScore === 0 && (
+                            <span className="text-xs text-slate-600">0 gols</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          {homePlayers.map((p) => {
+                            const goals = goalMap.get(p.id) ?? 0
+                            const canAdd = homeRemaining > 0
+                            return (
+                              <div key={p.id} className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg transition-colors ${goals > 0 ? 'bg-blue-600/20 border border-blue-500/40' : 'hover:bg-slate-700/50'}`}>
+                                <span className={`text-xs truncate flex-1 ${goals > 0 ? 'text-blue-300 font-medium' : 'text-slate-300'}`}>
+                                  {p.shirt_number ? <span className="text-slate-500 mr-1">#{p.shirt_number}</span> : null}
+                                  {p.name}
+                                </span>
+                                {!locked ? (
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      onClick={() => setPlayerGoals(p.id, -1, homeIds, homeScore)}
+                                      disabled={goals === 0}
+                                      className="w-5 h-5 rounded bg-slate-600 hover:bg-slate-500 text-white text-xs font-bold flex items-center justify-center disabled:opacity-30 disabled:cursor-default"
+                                    >−</button>
+                                    <span className={`w-4 text-center text-xs font-bold tabular-nums ${goals > 0 ? 'text-blue-400' : 'text-slate-500'}`}>{goals}</span>
+                                    <button
+                                      onClick={() => setPlayerGoals(p.id, 1, homeIds, homeScore)}
+                                      disabled={!canAdd}
+                                      className="w-5 h-5 rounded bg-slate-600 hover:bg-blue-600 text-white text-xs font-bold flex items-center justify-center disabled:opacity-30 disabled:cursor-default"
+                                    >+</button>
+                                  </div>
+                                ) : (
+                                  goals > 0 && <span className="text-xs font-bold text-blue-400 shrink-0">{goals} gol{goals > 1 ? 's' : ''}</span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Away team */}
+                  {(() => {
+                    const awayIds = awayPlayers.map((p) => p.id)
+                    const awayUsed = awayIds.reduce((s, id) => s + (goalMap.get(id) ?? 0), 0)
+                    const awayRemaining = awayScore - awayUsed
+                    return (
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-700">
+                          <div className="flex items-center gap-2">
+                            <FlagImage code={match.away_team?.code ?? ''} size="sm" />
+                            <span className="text-xs font-semibold text-slate-300">{match.away_team?.name}</span>
+                          </div>
+                          {!locked && awayScore > 0 && (
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${awayRemaining > 0 ? 'text-yellow-400 bg-yellow-400/10' : 'text-green-400 bg-green-400/10'}`}>
+                              {awayRemaining > 0 ? `+${awayRemaining} para distribuir` : '✓ distribuído'}
+                            </span>
+                          )}
+                          {!locked && awayScore === 0 && (
+                            <span className="text-xs text-slate-600">0 gols</span>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          {awayPlayers.map((p) => {
+                            const goals = goalMap.get(p.id) ?? 0
+                            const canAdd = awayRemaining > 0
+                            return (
+                              <div key={p.id} className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg transition-colors ${goals > 0 ? 'bg-blue-600/20 border border-blue-500/40' : 'hover:bg-slate-700/50'}`}>
+                                <span className={`text-xs truncate flex-1 ${goals > 0 ? 'text-blue-300 font-medium' : 'text-slate-300'}`}>
+                                  {p.shirt_number ? <span className="text-slate-500 mr-1">#{p.shirt_number}</span> : null}
+                                  {p.name}
+                                </span>
+                                {!locked ? (
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      onClick={() => setPlayerGoals(p.id, -1, awayIds, awayScore)}
+                                      disabled={goals === 0}
+                                      className="w-5 h-5 rounded bg-slate-600 hover:bg-slate-500 text-white text-xs font-bold flex items-center justify-center disabled:opacity-30 disabled:cursor-default"
+                                    >−</button>
+                                    <span className={`w-4 text-center text-xs font-bold tabular-nums ${goals > 0 ? 'text-blue-400' : 'text-slate-500'}`}>{goals}</span>
+                                    <button
+                                      onClick={() => setPlayerGoals(p.id, 1, awayIds, awayScore)}
+                                      disabled={!canAdd}
+                                      className="w-5 h-5 rounded bg-slate-600 hover:bg-blue-600 text-white text-xs font-bold flex items-center justify-center disabled:opacity-30 disabled:cursor-default"
+                                    >+</button>
+                                  </div>
+                                ) : (
+                                  goals > 0 && <span className="text-xs font-bold text-blue-400 shrink-0">{goals} gol{goals > 1 ? 's' : ''}</span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
 
             {/* Points breakdown if finished */}
             {myPrediction && match.status === 'finished' && (

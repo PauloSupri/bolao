@@ -139,10 +139,6 @@ export function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800 py-6 text-center text-slate-500 text-sm">
-        <p>Bolão Copa do Mundo 2026 — Feito com ❤️</p>
-      </footer>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Trophy, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -11,8 +11,12 @@ export function LoginPage() {
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (user) navigate('/dashboard', { replace: true })
+  }, [user, navigate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,8 +26,6 @@ export function LoginPage() {
     setLoading(false)
     if (error) {
       setError('E-mail ou senha inválidos. Tente novamente.')
-    } else {
-      navigate('/dashboard')
     }
   }
 

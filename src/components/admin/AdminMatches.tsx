@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Plus, Edit2, Save, X, Lock, Unlock } from 'lucide-react'
 import { useMatches, useCreateMatch, useUpdateMatch } from '../../hooks/useMatches'
 import { useTeams } from '../../hooks/useTeams'
@@ -37,11 +37,21 @@ export function AdminMatches() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  // Rola até o formulário sempre que ele abre
+  useEffect(() => {
+    if (showForm && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [showForm, editingId])
 
   function resetForm() {
     setForm(emptyForm)
     setShowForm(false)
     setEditingId(null)
+    setSaveSuccess(false)
   }
 
   async function handleSubmit() {
@@ -55,10 +65,14 @@ export function AdminMatches() {
     } else {
       await createMatch.mutateAsync(payload)
     }
-    resetForm()
+    setSaveSuccess(true)
+    setTimeout(resetForm, 1000)
   }
 
   function startEdit(match: Match) {
+    // Fecha o formulário antes de reabrir para forçar o scroll
+    setShowForm(false)
+    setEditingId(match.id)
     setForm({
       phase: match.phase,
       match_number: match.match_number,
@@ -70,8 +84,9 @@ export function AdminMatches() {
       status: match.status,
       is_locked: match.is_locked,
     })
-    setEditingId(match.id)
-    setShowForm(true)
+    setSaveSuccess(false)
+    // Pequeno delay para o useEffect detectar a mudança e abrir+rolar
+    setTimeout(() => setShowForm(true), 50)
   }
 
   async function toggleLock(match: Match) {
@@ -82,15 +97,15 @@ export function AdminMatches() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">Jogos ({matches.length})</h2>
-        <Button onClick={() => setShowForm(true)} size="sm">
+        <Button onClick={() => { resetForm(); setTimeout(() => setShowForm(true), 50) }} size="sm">
           <Plus className="w-4 h-4" /> Adicionar
         </Button>
       </div>
 
       {showForm && (
-        <Card className="p-4">
+        <Card className="p-4 border-blue-500/50" ref={formRef}>
           <h3 className="text-sm font-semibold text-white mb-3">
-            {editingId ? 'Editar jogo' : 'Novo jogo'}
+            {editingId ? '✏️ Editar jogo' : '➕ Novo jogo'}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <Select label="Fase" value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value as MatchPhase })}>
@@ -104,11 +119,11 @@ export function AdminMatches() {
             />
             <Select label="Time da casa" value={form.home_team_id} onChange={(e) => setForm({ ...form, home_team_id: e.target.value })}>
               <option value="">A definir</option>
-              {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {teams.map((t) => <option key={t.id} value={t.id}>{getFlagEmoji(t.code)} {t.name}</option>)}
             </Select>
             <Select label="Time visitante" value={form.away_team_id} onChange={(e) => setForm({ ...form, away_team_id: e.target.value })}>
               <option value="">A definir</option>
-              {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {teams.map((t) => <option key={t.id} value={t.id}>{getFlagEmoji(t.code)} {t.name}</option>)}
             </Select>
             <Input
               label="Data e hora"
@@ -135,20 +150,24 @@ export function AdminMatches() {
               onChange={(e) => setForm({ ...form, city: e.target.value })}
             />
           </div>
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-2 mt-3 items-center">
             <Button onClick={handleSubmit} loading={createMatch.isPending || updateMatch.isPending}>
               <Save className="w-4 h-4" /> Salvar
             </Button>
             <Button variant="ghost" onClick={resetForm}>
               <X className="w-4 h-4" /> Cancelar
             </Button>
+            {saveSuccess && <span className="text-green-400 text-sm">✓ Salvo!</span>}
           </div>
         </Card>
       )}
 
       <div className="space-y-2">
         {matches.map((match) => (
-          <Card key={match.id} className="p-3">
+          <Card
+            key={match.id}
+            className={`p-3 transition-all ${editingId === match.id ? 'border-blue-500/60 bg-blue-950/20' : ''}`}
+          >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <span className="text-xs text-blue-400 whitespace-nowrap">{phaseLabel(match.phase)}</span>
@@ -166,10 +185,18 @@ export function AdminMatches() {
                 <span className="text-xs text-slate-400 hidden sm:block">{formatDateShort(match.match_date)}</span>
                 {match.status === 'live' && <Badge variant="live">Vivo</Badge>}
                 {match.status === 'finished' && <Badge>Enc.</Badge>}
-                <button onClick={() => toggleLock(match)} className="text-slate-400 hover:text-white p-1" title={match.is_locked ? 'Desbloquear' : 'Bloquear'}>
+                <button
+                  onClick={() => toggleLock(match)}
+                  className="text-slate-400 hover:text-white p-1"
+                  title={match.is_locked ? 'Desbloquear' : 'Bloquear'}
+                >
                   {match.is_locked ? <Lock className="w-4 h-4 text-red-400" /> : <Unlock className="w-4 h-4" />}
                 </button>
-                <button onClick={() => startEdit(match)} className="text-slate-400 hover:text-white p-1">
+                <button
+                  onClick={() => startEdit(match)}
+                  className={`p-1 transition-colors ${editingId === match.id ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                  title="Editar jogo"
+                >
                   <Edit2 className="w-4 h-4" />
                 </button>
               </div>

@@ -61,42 +61,48 @@ export function MyPredictionsPage() {
 
             return (
               <Link to={`/jogos/${match.id}`} key={pred.id}>
-                <Card hover className="p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    {/* Phase & date */}
+                <Card hover className="p-3 sm:p-4">
+                  {/* Phase & date (mobile: topo) */}
+                  <div className="flex sm:hidden items-center justify-between mb-2">
+                    <span className="text-xs text-blue-400 truncate">{phaseLabel(match.phase)}</span>
+                    <span className="text-xs text-slate-500 shrink-0 ml-2">{formatDateShort(match.match_date)}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 sm:gap-4">
+                    {/* Phase & date (desktop) */}
                     <div className="hidden sm:flex flex-col min-w-24">
                       <span className="text-xs text-blue-400">{phaseLabel(match.phase)}</span>
                       <span className="text-xs text-slate-500">{formatDateShort(match.match_date)}</span>
                     </div>
 
                     {/* Teams & scores */}
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="flex items-center gap-2 flex-1 justify-end">
-                        <span className="text-sm text-white font-medium text-right">{match.home_team?.name}</span>
-                        <FlagImage code={match.home_team?.code ?? ''} size="sm" />
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 justify-end">
+                        <span className="text-xs sm:text-sm text-white font-medium text-right truncate">{match.home_team?.name}</span>
+                        <FlagImage code={match.home_team?.code ?? ''} size="sm" className="shrink-0" />
                       </div>
 
-                      <div className="flex flex-col items-center gap-0.5 min-w-16">
+                      <div className="flex flex-col items-center gap-0.5 shrink-0">
                         {/* Prediction */}
-                        <span className="text-sm font-mono text-slate-300">
+                        <span className="text-sm font-mono text-slate-300 whitespace-nowrap">
                           {pred.home_score}–{pred.away_score}
                         </span>
                         {/* Official */}
                         {finished && (
-                          <span className="text-xs font-mono text-slate-500">
+                          <span className="text-xs font-mono text-slate-500 whitespace-nowrap">
                             {match.home_score}–{match.away_score}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 flex-1">
-                        <FlagImage code={match.away_team?.code ?? ''} size="sm" />
-                        <span className="text-sm text-white font-medium">{match.away_team?.name}</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                        <FlagImage code={match.away_team?.code ?? ''} size="sm" className="shrink-0" />
+                        <span className="text-xs sm:text-sm text-white font-medium truncate">{match.away_team?.name}</span>
                       </div>
                     </div>
 
                     {/* Points & badges */}
-                    <div className="flex flex-col items-end gap-1 min-w-20">
+                    <div className="flex flex-col items-end gap-1 shrink-0">
                       {finished ? (
                         <>
                           <span className="text-lg font-bold text-yellow-400">+{pred.total_points}</span>

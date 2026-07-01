@@ -110,10 +110,10 @@ export function DashboardPage() {
                     {/* Linha de cor no topo */}
                     <div className={`h-1 w-full ${isLive ? 'bg-green-500' : isFinished ? 'bg-slate-600' : 'bg-blue-600'}`} />
 
-                    <div className="p-4 sm:p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-xs text-blue-400 font-medium">{phaseLabel(match.phase)}</span>
-                        <div className="flex items-center gap-2">
+                    <div className="p-3 sm:p-5">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <span className="text-xs text-blue-400 font-medium truncate pr-2">{phaseLabel(match.phase)}</span>
+                        <div className="flex items-center gap-2 shrink-0">
                           {locked && !isFinished && !isLive && <Lock className="w-3 h-3 text-slate-500" />}
                           {isLive && <Badge variant="live">● Ao Vivo</Badge>}
                           {isFinished && <Badge>Encerrado</Badge>}
@@ -122,12 +122,12 @@ export function DashboardPage() {
                       </div>
 
                       {/* Times e placar */}
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-start justify-between gap-1 sm:gap-4">
                         {/* Time da casa */}
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <FlagImage code={match.home_team?.code ?? ''} size="xl" className="shrink-0" />
-                          <div className="min-w-0">
-                            <p className="font-bold text-white text-base sm:text-lg leading-tight">
+                        <div className="flex flex-col items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                          <FlagImage code={match.home_team?.code ?? ''} size="lg" className="sm:w-20 sm:h-14" />
+                          <div className="min-w-0 text-center">
+                            <p className="font-bold text-white text-sm sm:text-lg leading-tight line-clamp-2">
                               {match.home_team?.name ?? 'A definir'}
                             </p>
                             <p className="text-xs text-slate-400">{match.home_team?.code}</p>
@@ -135,31 +135,31 @@ export function DashboardPage() {
                         </div>
 
                         {/* Placar / horário */}
-                        <div className="flex flex-col items-center shrink-0 px-2">
+                        <div className="flex flex-col items-center shrink-0 px-1 pt-1 sm:pt-2">
                           {isFinished || isLive ? (
-                            <div className="flex items-center gap-3">
-                              <span className="text-3xl sm:text-4xl font-black text-white tabular-nums">
+                            <div className="flex items-center gap-1.5 sm:gap-3">
+                              <span className="text-2xl sm:text-4xl font-black text-white tabular-nums">
                                 {match.home_score ?? 0}
                               </span>
-                              <span className="text-slate-500 text-xl font-bold">–</span>
-                              <span className="text-3xl sm:text-4xl font-black text-white tabular-nums">
+                              <span className="text-slate-500 text-lg sm:text-xl font-bold">–</span>
+                              <span className="text-2xl sm:text-4xl font-black text-white tabular-nums">
                                 {match.away_score ?? 0}
                               </span>
                             </div>
                           ) : (
                             <div className="text-center">
-                              <p className="text-2xl font-black text-white">
+                              <p className="text-xl sm:text-2xl font-black text-white">
                                 {formatDateShort(match.match_date).split(' ')[1]}
                               </p>
-                              <p className="text-xs text-slate-400 mt-0.5">horário de Brasília</p>
+                              <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 whitespace-nowrap">Brasília</p>
                             </div>
                           )}
 
                           {/* Palpite do usuário */}
                           {pred && (
                             <div className="mt-2 text-center">
-                              <span className="text-xs text-slate-400">
-                                Seu palpite: <span className="text-white font-mono font-semibold">{pred.home_score}–{pred.away_score}</span>
+                              <span className="text-[10px] sm:text-xs text-slate-400 block">
+                                Palpite: <span className="text-white font-mono font-semibold">{pred.home_score}–{pred.away_score}</span>
                               </span>
                               {pred.total_points > 0 && (
                                 <div className="text-yellow-400 font-bold text-sm">+{pred.total_points} pts</div>
@@ -168,37 +168,37 @@ export function DashboardPage() {
                           )}
 
                           {!pred && !locked && (
-                            <span className="mt-2 text-xs text-blue-400 group-hover:underline font-medium">
+                            <span className="mt-2 text-[10px] sm:text-xs text-blue-400 group-hover:underline font-medium whitespace-nowrap">
                               Palpitar →
                             </span>
                           )}
                           {!pred && locked && !isFinished && (
-                            <span className="mt-2 text-xs text-slate-500">Sem palpite</span>
+                            <span className="mt-2 text-[10px] sm:text-xs text-slate-500">Sem palpite</span>
                           )}
                         </div>
 
                         {/* Time visitante */}
-                        <div className="flex items-center gap-3 flex-1 min-w-0 justify-end">
-                          <div className="min-w-0 text-right">
-                            <p className="font-bold text-white text-base sm:text-lg leading-tight">
+                        <div className="flex flex-col items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                          <FlagImage code={match.away_team?.code ?? ''} size="lg" className="sm:w-20 sm:h-14" />
+                          <div className="min-w-0 text-center">
+                            <p className="font-bold text-white text-sm sm:text-lg leading-tight line-clamp-2">
                               {match.away_team?.name ?? 'A definir'}
                             </p>
                             <p className="text-xs text-slate-400">{match.away_team?.code}</p>
                           </div>
-                          <FlagImage code={match.away_team?.code ?? ''} size="xl" className="shrink-0" />
                         </div>
                       </div>
 
                       {/* Rodapé */}
-                      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-700/50 text-xs text-slate-400">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 sm:mt-4 pt-3 border-t border-slate-700/50 text-xs text-slate-400">
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
+                          <Calendar className="w-3 h-3 shrink-0" />
                           <span>{formatDateShort(match.match_date)}</span>
                         </div>
                         {match.city && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            <span>{match.venue ? `${match.venue}, ` : ''}{match.city}</span>
+                          <div className="flex items-center gap-1 min-w-0">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{match.venue ? `${match.venue}, ` : ''}{match.city}</span>
                           </div>
                         )}
                       </div>

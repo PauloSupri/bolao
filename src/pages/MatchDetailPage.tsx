@@ -128,10 +128,10 @@ export function MatchDetailPage() {
       </button>
 
       {/* Match header */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm text-blue-400 font-medium">{phaseLabel(match.phase)}</span>
-          <div className="flex items-center gap-2">
+          <span className="text-sm text-blue-400 font-medium truncate pr-2">{phaseLabel(match.phase)}</span>
+          <div className="flex items-center gap-2 shrink-0">
             {locked && <Lock className="w-4 h-4 text-slate-500" />}
             {match.status === 'live' && <Badge variant="live">● Ao Vivo</Badge>}
             {match.status === 'finished' && <Badge>Encerrado</Badge>}
@@ -139,21 +139,21 @@ export function MatchDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-around gap-4 my-6">
-          <div className="flex flex-col items-center gap-2 flex-1">
-            <FlagImage code={match.home_team?.code ?? ''} size="xl" />
-            <span className="font-bold text-white text-center">{match.home_team?.name ?? 'A definir'}</span>
+        <div className="flex items-start justify-around gap-2 sm:gap-4 my-6">
+          <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
+            <FlagImage code={match.home_team?.code ?? ''} size="lg" className="sm:w-20 sm:h-14" />
+            <span className="font-bold text-white text-center text-sm sm:text-base leading-tight line-clamp-2">{match.home_team?.name ?? 'A definir'}</span>
             {match.home_team?.code && <span className="text-xs text-slate-400">{match.home_team.code}</span>}
           </div>
 
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 shrink-0 pt-2">
             {match.status !== 'scheduled' ? (
               <>
-                <div className="text-4xl font-bold text-white">
+                <div className="text-3xl sm:text-4xl font-bold text-white whitespace-nowrap">
                   {match.home_score ?? 0} – {match.away_score ?? 0}
                 </div>
                 {(match.home_score_penalties != null) && (
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-slate-400 whitespace-nowrap">
                     ({match.home_score_penalties} – {match.away_score_penalties} pens.)
                   </div>
                 )}
@@ -164,22 +164,22 @@ export function MatchDetailPage() {
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-2 flex-1">
-            <FlagImage code={match.away_team?.code ?? ''} size="xl" />
-            <span className="font-bold text-white text-center">{match.away_team?.name ?? 'A definir'}</span>
+          <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
+            <FlagImage code={match.away_team?.code ?? ''} size="lg" className="sm:w-20 sm:h-14" />
+            <span className="font-bold text-white text-center text-sm sm:text-base leading-tight line-clamp-2">{match.away_team?.name ?? 'A definir'}</span>
             {match.away_team?.code && <span className="text-xs text-slate-400">{match.away_team.code}</span>}
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-6 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
           <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
+            <Calendar className="w-3 h-3 shrink-0" />
             {formatDate(match.match_date)}
           </div>
           {match.city && (
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              {match.venue ? `${match.venue}, ` : ''}{match.city}
+            <div className="flex items-center gap-1 min-w-0">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{match.venue ? `${match.venue}, ` : ''}{match.city}</span>
             </div>
           )}
         </div>
@@ -200,7 +200,7 @@ export function MatchDetailPage() {
       </Card>
 
       {/* Prediction form */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-white mb-4">
           {locked ? 'Meu palpite' : myPrediction ? 'Editar palpite' : 'Fazer palpite'}
         </h2>
@@ -261,7 +261,7 @@ export function MatchDetailPage() {
               {players.length === 0 ? (
                 <p className="text-xs text-slate-500 italic">Jogadores ainda não cadastrados para este jogo.</p>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   {/* Home team */}
                   {(() => {
                     const homeIds = homePlayers.map((p) => p.id)
@@ -269,18 +269,18 @@ export function MatchDetailPage() {
                     const homeRemaining = homeScore - homeUsed
                     return (
                       <div>
-                        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-700">
-                          <div className="flex items-center gap-2">
-                            <FlagImage code={match.home_team?.code ?? ''} size="sm" />
-                            <span className="text-xs font-semibold text-slate-300">{match.home_team?.name}</span>
+                        <div className="flex flex-col gap-1 mb-2 pb-2 border-b border-slate-700">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FlagImage code={match.home_team?.code ?? ''} size="sm" className="shrink-0" />
+                            <span className="text-xs font-semibold text-slate-300 truncate">{match.home_team?.name}</span>
                           </div>
                           {!locked && homeScore > 0 && (
-                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${homeRemaining > 0 ? 'text-yellow-400 bg-yellow-400/10' : 'text-green-400 bg-green-400/10'}`}>
-                              {homeRemaining > 0 ? `+${homeRemaining} para distribuir` : '✓ distribuído'}
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded self-start ${homeRemaining > 0 ? 'text-yellow-400 bg-yellow-400/10' : 'text-green-400 bg-green-400/10'}`}>
+                              {homeRemaining > 0 ? `faltam ${homeRemaining}` : '✓ ok'}
                             </span>
                           )}
                           {!locked && homeScore === 0 && (
-                            <span className="text-xs text-slate-600">0 gols</span>
+                            <span className="text-xs text-slate-600 self-start">0 gols</span>
                           )}
                         </div>
                         <div className="space-y-1">
@@ -325,18 +325,18 @@ export function MatchDetailPage() {
                     const awayRemaining = awayScore - awayUsed
                     return (
                       <div>
-                        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-700">
-                          <div className="flex items-center gap-2">
-                            <FlagImage code={match.away_team?.code ?? ''} size="sm" />
-                            <span className="text-xs font-semibold text-slate-300">{match.away_team?.name}</span>
+                        <div className="flex flex-col gap-1 mb-2 pb-2 border-b border-slate-700">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FlagImage code={match.away_team?.code ?? ''} size="sm" className="shrink-0" />
+                            <span className="text-xs font-semibold text-slate-300 truncate">{match.away_team?.name}</span>
                           </div>
                           {!locked && awayScore > 0 && (
-                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${awayRemaining > 0 ? 'text-yellow-400 bg-yellow-400/10' : 'text-green-400 bg-green-400/10'}`}>
-                              {awayRemaining > 0 ? `+${awayRemaining} para distribuir` : '✓ distribuído'}
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded self-start ${awayRemaining > 0 ? 'text-yellow-400 bg-yellow-400/10' : 'text-green-400 bg-green-400/10'}`}>
+                              {awayRemaining > 0 ? `faltam ${awayRemaining}` : '✓ ok'}
                             </span>
                           )}
                           {!locked && awayScore === 0 && (
-                            <span className="text-xs text-slate-600">0 gols</span>
+                            <span className="text-xs text-slate-600 self-start">0 gols</span>
                           )}
                         </div>
                         <div className="space-y-1">
